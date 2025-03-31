@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String     @id @default(uuid())
+  email             String     @unique
+  password          String
+  role              Role       @default(USER)
+  name              String?
+  createdAt         DateTime   @default(now())
+  orders            Order[]
+  payments          Payment[]
+  uploadedDocuments Document[] @relation("UploadedDocuments")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Region {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  packages  Package[]
+  createdAt DateTime  @default(now())
+  orders    Order[]
+}
+
+model Package {
+  id        String   @id @default(uuid())
+  name      String
+  price     Float
+  features  String   @db.Text
+  regionId  String
+  region    Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  user      User        @relation(fields: [userId], references: [id])
+  userId    String
+  region    Region      @relation(fields: [regionId], references: [id])
+  regionId  String
+  package   Package     @relation(fields: [packageId], references: [id])
+  packageId String
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  payment   Payment?
+  document  Document?
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  order           Order         @relation(fields: [orderId], references: [id])
+  orderId         String        @unique
+  user            User          @relation(fields: [userId], references: [id])
+  userId          String
+  stripePaymentId String        @unique
+  amount          Float
+  status          PaymentStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Document {
+  id           String   @id @default(uuid())
+  fileUrl      String
+  fileName     String
+  order        Order    @relation(fields: [orderId], references: [id])
+  orderId      String   @unique
+  uploadedAt   DateTime @default(now())
+  uploadedBy   User     @relation("UploadedDocuments", fields: [uploadedById], references: [id])
+  uploadedById String
+}
