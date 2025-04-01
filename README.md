@@ -5,7 +5,7 @@ This is the backend for the Quemem Formation project, built with NestJS. It hand
 ## Setup
 1. Clone the repository:
    ```sh
-   git clone https://github.com/your-repo/quemem-formation-backend.git
+   git clone https://github.com/Fenet04/quemem_backend.git
    ```
 2. Install dependencies:
    ```sh
